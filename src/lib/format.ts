@@ -29,10 +29,43 @@ export const docStatusConfig: Record<string, { label: string; className: string 
   error: { label: "Hiba", className: "bg-red-100 text-red-800" },
 };
 
-/** Document type labels */
+/** Document type labels (keys match db doc_type values) */
 export const docTypeLabels: Record<string, string> = {
-  purchase_contract: "Adásvételi szerződés",
-  operator_contract: "Üzembentartói szerződés",
-  power_of_attorney: "Meghatalmazás",
-  handover_receipt: "Átadás-átvételi elismervény",
+  adasveteli: "Adásvételi szerződés",
+  uzembentartoi: "Üzembentartói szerződés",
+  meghatalmazas: "Meghatalmazás",
+  atadas_atveteli: "Átadás-átvételi elismervény",
+};
+
+/** Format date as Hungarian: "2026. február 21." */
+export function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "–";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "–";
+  const months = ["január","február","március","április","május","június","július","augusztus","szeptember","október","november","december"];
+  return `${d.getFullYear()}. ${months[d.getMonth()]} ${d.getDate()}.`;
+}
+
+/** Fuel type labels */
+export const fuelTypeLabels: Record<string, string> = {
+  benzin: "Benzin",
+  dizel: "Dízel",
+  elektromos: "Elektromos",
+  hibrid: "Hibrid",
+  lpg: "LPG",
+  egyeb: "Egyéb",
+};
+
+/** Payment method labels */
+export const paymentMethodLabels: Record<string, string> = {
+  cash: "Készpénz",
+  transfer: "Átutalás",
+  financing: "Finanszírozás",
+};
+
+/** Sale status config */
+export const saleStatusConfig: Record<string, { label: string; className: string }> = {
+  draft: { label: "Vázlat", className: "bg-gray-100 text-gray-800" },
+  completed: { label: "Befejezett", className: "bg-green-100 text-green-800" },
+  cancelled: { label: "Törölt", className: "bg-red-100 text-red-800" },
 };
