@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, profile, loading } = useAuth();
 
-  if (loading) {
+  // Show spinner while auth or profile is still loading
+  if (loading || (session && profile === null)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

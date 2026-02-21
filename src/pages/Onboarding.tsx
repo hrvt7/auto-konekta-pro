@@ -52,65 +52,63 @@ export default function Onboarding() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast({ title: "Hiba", description: "Nincs bejelentkezett felhasználó.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
+    try {
+      const dealershipData: Record<string, unknown> = {
+        entity_type: isCompany ? "company" : "individual",
+        name: dealershipName,
+        address: isCompany ? address : ownerAddress,
+        phone: phone || null,
+        email: email || null,
+      };
 
-    const dealershipData: Record<string, unknown> = {
-      entity_type: isCompany ? "company" : "individual",
-      name: dealershipName,
-      address: isCompany ? address : ownerAddress,
-      phone,
-      email,
-    };
+      if (isCompany) {
+        Object.assign(dealershipData, {
+          company_name: companyName,
+          registration_number: regNumber || null,
+          tax_number: taxNumber || null,
+          representative_name: representative || null,
+        });
+      } else {
+        Object.assign(dealershipData, {
+          owner_name: ownerName,
+          owner_birth_place: birthPlace || null,
+          owner_birth_date: birthDate || null,
+          owner_mothers_name: mothersName || null,
+          owner_id_type: idType || null,
+          owner_id_number: idNumber || null,
+          owner_nationality: "magyar",
+        });
+      }
 
-    if (isCompany) {
-      Object.assign(dealershipData, {
-        company_name: companyName,
-        registration_number: regNumber,
-        tax_number: taxNumber,
-        representative_name: representative,
-      });
-    } else {
-      Object.assign(dealershipData, {
-        owner_name: ownerName,
-        owner_birth_place: birthPlace,
-        owner_birth_date: birthDate || null,
-        owner_mothers_name: mothersName,
-        owner_id_type: idType,
-        owner_id_number: idNumber,
-        owner_nationality: "magyar",
-      });
-    }
+      const { data: dealership, error: dErr } = await supabase
+        .from("dealerships")
+        .insert(dealershipData as any)
+        .select("id")
+        .single();
 
-    const { data: dealership, error: dErr } = await supabase
-      .from("dealerships")
-      .insert(dealershipData as any)
-      .select("id")
-      .single();
+      if (dErr) throw new Error("Kereskedés létrehozása sikertelen: " + dErr.message);
+      if (!dealership) throw new Error("Kereskedés nem jött létre.");
 
-    if (dErr || !dealership) {
-      console.error("Dealership insert error:", dErr);
-      toast({ title: "Hiba", description: dErr?.message || "Nem sikerült létrehozni a kereskedést.", variant: "destructive" });
+      const { error: pErr } = await supabase
+        .from("profiles")
+        .update({ dealership_id: dealership.id })
+        .eq("id", user.id);
+
+      if (pErr) throw new Error("Profil frissítése sikertelen: " + pErr.message);
+
+      await refreshProfile();
+      toast({ title: "Siker!", description: "Kereskedés sikeresen létrehozva." });
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast({ title: "Hiba", description: err.message || "Ismeretlen hiba.", variant: "destructive" });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { error: pErr } = await supabase
-      .from("profiles")
-      .update({ dealership_id: dealership.id })
-      .eq("id", user.id);
-
-    if (pErr) {
-      console.error("Profile update error:", pErr);
-      toast({ title: "Hiba", description: pErr.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    await refreshProfile();
-    setLoading(false);
-    toast({ title: "Kész!", description: "Kereskedés sikeresen létrehozva." });
-    navigate("/dashboard");
   };
 
   return (
