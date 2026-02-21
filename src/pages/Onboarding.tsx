@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Car } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Onboarding() {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, loading: authLoading, session } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,18 @@ export default function Onboarding() {
   const [dealershipName, setDealershipName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +89,7 @@ export default function Onboarding() {
       .single();
 
     if (dErr || !dealership) {
+      console.error("Dealership insert error:", dErr);
       toast({ title: "Hiba", description: dErr?.message || "Nem sikerült létrehozni a kereskedést.", variant: "destructive" });
       setLoading(false);
       return;
@@ -88,6 +101,7 @@ export default function Onboarding() {
       .eq("id", user.id);
 
     if (pErr) {
+      console.error("Profile update error:", pErr);
       toast({ title: "Hiba", description: pErr.message, variant: "destructive" });
       setLoading(false);
       return;
